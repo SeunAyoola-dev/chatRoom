@@ -1,0 +1,1 @@
+/usr/bin/cc -Wl,--enable-auto-import CMakeFiles/socket_client.dir/SocketClient/main.c.o -o socket_client.exe -Wl,--out-implib,libsocket_client.dll.a -Wl,--major-image-version,0,--minor-image-version,0  libsocket_utils.a 

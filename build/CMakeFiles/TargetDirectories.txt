@@ -1,0 +1,4 @@
+/cygdrive/c/Users/seuna/Desktop/CProjects/build/CMakeFiles/rebuild_cache.dir
+/cygdrive/c/Users/seuna/Desktop/CProjects/build/CMakeFiles/edit_cache.dir
+/cygdrive/c/Users/seuna/Desktop/CProjects/build/CMakeFiles/socket_client.dir
+/cygdrive/c/Users/seuna/Desktop/CProjects/build/CMakeFiles/socket_utils.dir
