@@ -2,30 +2,16 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
-#include <malloc.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include "../SocketUtil/socket_utils.h"
 
-int createTCPIPv4Socket() {
-    return socket(AF_INET, SOCK_STREAM, 0);
-}
-
-struct sockaddr_in* createIPv4Address(char* ip, int port) {
-    struct sockaddr_in* address = malloc(sizeof(struct sockaddr_in));
-    address->sin_family = AF_INET;
-    address->sin_port = htons(port);
-
-    if(strlen(ip) == 0) {
-        address->sin_addr.s_addr = INADDR_ANY; // if empty will accept connections of any IP address of the host
-    } else {
-        inet_pton(AF_INET, ip, &address->sin_addr); // otherwise bind to that specific IP address
-    }
-
-    return address;
-}
-
-void receiveMessages(int socketFD) {
+void *receiveMessages(void *arg) {
+    int socketFD = *(int *)arg;
+    free(arg);
     char buffer[1024];
 
         while(true) {
@@ -41,8 +27,10 @@ void receiveMessages(int socketFD) {
 }
 
 void createNewThreadForMessaging(int socketFD) {
+    int *fd = malloc(sizeof(int));
+    *fd = socketFD;
     pthread_t thread_id;
-    pthread_create(&thread_id, NULL, receiveMessages, socketFD);
+    pthread_create(&thread_id, NULL, receiveMessages, fd);
 }
 
 int main() {

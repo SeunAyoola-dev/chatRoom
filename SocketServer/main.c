@@ -2,10 +2,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
-#include <malloc.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include "../SocketUtil/socket_utils.h"
 
 
 struct AcceptedSocket {
@@ -32,18 +34,6 @@ struct AcceptedSocket * acceptIncomingConnections(int serverSocketFD) {
     return acceptedSocket;
 }
 
-void startAcceptingIncomingConnections(int serverSocketFD) {
-
-    while(true) {
-
-        struct AcceptedSocket* clientSocket = acceptIncomingConnections(serverSocketFD);
-        acceptedSockets[acceptedSocketCount++] = *clientSocket;
-
-        createThreadForClient(clientSocket);
-
-    }
-}
-
 void sendRecievedMessageToClients(char *buffer, int socketFD) {
     for(int i = 0; i < acceptedSocketCount; i++) {
         if(acceptedSockets[i].socketFD != socketFD) {
@@ -52,7 +42,9 @@ void sendRecievedMessageToClients(char *buffer, int socketFD) {
     }
 }
 
-void receiveData(int socketFD) {
+void *receiveData(void *arg) {
+    int socketFD = *(int *)arg;
+    free(arg);
     char buffer[1024];
 
     while(true) {
@@ -70,27 +62,22 @@ void receiveData(int socketFD) {
 }
 
 void createThreadForClient(struct AcceptedSocket *clientSocket) {
+    int *fd = malloc(sizeof(int));
+    *fd = clientSocket->socketFD;
     pthread_t thread_id;
-    pthread_create(&thread_id, NULL, receiveData, clientSocket->socketFD); // create a new thread to handle incoming connections
+    pthread_create(&thread_id, NULL, receiveData, fd); // create a new thread to handle incoming connections
 }
 
+void startAcceptingIncomingConnections(int serverSocketFD) {
 
-int createTCPIPv4Socket() {
-    return socket(AF_INET, SOCK_STREAM, 0);
-}
+    while(true) {
 
-struct sockaddr_in* createIPv4Address(char* ip, int port) {
-    struct sockaddr_in* address = malloc(sizeof(struct sockaddr_in));
-    address->sin_family = AF_INET;
-    address->sin_port = htons(port);
+        struct AcceptedSocket* clientSocket = acceptIncomingConnections(serverSocketFD);
+        acceptedSockets[acceptedSocketCount++] = *clientSocket;
 
-    if(strlen(ip) == 0) {
-        address->sin_addr.s_addr = INADDR_ANY; // if empty will accept connections of any IP address of the host
-    } else {
-        inet_pton(AF_INET, ip, &address->sin_addr); // otherwise bind to that specific IP address
+        createThreadForClient(clientSocket);
+
     }
-
-    return address;
 }
 
 int main() {
@@ -101,8 +88,6 @@ int main() {
     int result = bind(serverSocketFD, serverAddress, sizeof (*serverAddress));
 
     if (result == 0) printf("Binding success.\n");
-    
-    int listenResult = listen(serverSocketFD, 10); // 10: maximum number of queued connections
 
     startAcceptingIncomingConnections(serverSocketFD);
 
