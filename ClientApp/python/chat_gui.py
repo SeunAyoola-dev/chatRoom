@@ -26,7 +26,7 @@ def send_message(event=None):
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((HOST, PORT))
 
-window = tk.TK()
+window = tk.Tk()
 window.title("Chat Room Client")
 chat_box = ScrolledText(window, width=60, height = 20, state = "normal")
 chat_box.pack(padx = 10, pady=10)
