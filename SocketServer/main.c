@@ -73,6 +73,12 @@ void startAcceptingIncomingConnections(int serverSocketFD) {
     while(true) {
 
         struct AcceptedSocket* clientSocket = acceptIncomingConnections(serverSocketFD);
+        if (acceptedSocketCount >= 10) {
+            printf("Accepted connections closed.\n");
+            close(clientSocket->socketFD);
+            free(clientSocket);
+            continue;
+        }
         acceptedSockets[acceptedSocketCount++] = *clientSocket;
 
         createThreadForClient(clientSocket);
@@ -89,6 +95,7 @@ int main() {
 
     if (result == 0) printf("Binding success.\n");
 
+    listen(serverSocketFD, 10);
     startAcceptingIncomingConnections(serverSocketFD);
 
     shutdown(serverSocketFD, SHUT_RDWR);
